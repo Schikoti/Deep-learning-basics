@@ -1,0 +1,159 @@
+import numpy as np
+import matplotlib.pyplot as plt
+#import datasets
+
+
+class LogisticRegression(object):
+    def __init__(self, n_epochs=10, lr=0.1, l2_reg=0):
+        """
+        Initialize variables
+        """
+        self.b = None
+        self.w = None
+        self.n_epochs = n_epochs
+        self.lr = lr
+        self.l2_reg = l2_reg
+
+    def forward(self, x):
+        """
+        Compute "forward" computation of logistic regression
+
+        This will return the squashing function:
+        f(x) = 1 / (1 + exp(-(w^T x + b)))
+
+        Parameters
+        ----------
+        x : np.array
+            The input data of size number of training samples x number
+            of features
+
+        Returns
+        -------
+        np.array
+            A 1 dimensional vector of the logistic function
+        """
+        f = 1 / (1 + np.exp(-(np.dot(self.w, np.transpose(x)) + self.b)))
+        #print f
+        return f
+
+    def loss(self, x, y):
+        """
+        Return the logistic loss
+        L(x) = ln(1 + exp(-y * (w^Tx + b)))
+
+        Parameters
+        ----------
+        x : np.array
+            The input data of size number of training samples x number
+            of features
+        y : np.array
+            The vector of corresponding class labels
+
+        Returns
+        -------
+        float
+            The logistic loss value
+        """
+        loss = np.mean(np.log(1 + np.exp((-y * (np.dot(self.w, np.transpose(x)) + self.b)))))
+        #print loss
+        return loss
+
+    def grad_loss_wrt_b(self, x, y):
+        """
+        Compute the gradient of the loss with respect to b
+
+        Parameters
+        ----------
+        x : np.array
+            The input data of size number of training samples x number
+            of features
+        y : np.array
+            The vector of corresponding class labels
+
+        Returns
+        -------
+        float
+            The gradient
+        """
+        dhg = (1/(1 + np.exp((-y * (np.dot(self.w, np.transpose(x)) + self.b)))))
+        dgf = np.exp((-y * (np.dot(self.w, np.transpose(x)) + self.b)))
+        dfb = -y
+        gb = dhg*dgf*dfb
+        gbm = np.mean(gb)
+        return gbm
+
+    def grad_loss_wrt_w(self, x, y):
+        """
+        Compute the gradient of the loss with respect to w
+
+        Parameters
+        ----------
+        x : np.array
+            The input data of size number of training samples x number
+            of features
+        y : np.array
+            The vector of corresponding class labels
+
+        Returns
+        -------
+        np.array
+            The gradient (should be the same size as self.w)
+        """
+        dhg1 = (1 / (1 + np.exp((-y * (np.dot(self.w, np.transpose(x)) + self.b)))))
+        dgf1 = np.exp((-y * (np.dot(self.w, np.transpose(x)) + self.b)))
+        dfb1 = -y
+        gb1 = dhg1 * dgf1 * dfb1
+        gw = (np.transpose(gb1) * x)
+        gwm = gw.mean(axis=0)+ (self.l2_reg*self.w)
+        return gwm
+
+
+    def fit(self, x, y):
+        """
+        Fit the model to the data
+
+        Parameters
+        ----------
+        x : np.array
+            The input data of size number of training samples x number
+            of features
+        y : np.array
+            The vector of corresponding class labels
+        """
+        self.w = np.random.rand(1, x.shape[1])
+        self.b = 0
+        lossf=[]
+        for i in range(1, self.n_epochs+1):
+            temp = self.b - self.lr * self.grad_loss_wrt_b(x,y)
+            self.w = self.w - self.lr * self.grad_loss_wrt_w(x,y)
+            self.b = temp
+            lf = self.loss(x,y)
+            lossf.append(lf)
+        return lossf
+
+    def predict(self, x):
+        """
+        Predict the labels for test data x
+
+        Parameters
+        ----------
+        x : np.array
+            The input data of size number of training samples x number
+            of features
+
+        Returns
+        -------
+        np.array
+            Vector of predicted class labels for every training sample
+        """
+        yfinal=[]
+        ytest = self.forward(x)
+        ypred = ytest.tolist()
+        for i in ypred[0]:
+            if i <= 0.5:
+                y = -1
+            else:
+                y = 1
+            yfinal.append(y)
+        return np.asarray(yfinal)
+
