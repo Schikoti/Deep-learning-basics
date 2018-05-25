@@ -1,0 +1,1 @@
+Classification accuracy for two datasets1. Sentiment Ð 74%2. Newsgroups Ð 64%
